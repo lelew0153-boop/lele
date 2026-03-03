@@ -371,7 +371,6 @@
           // Countdown in days + HMS
           const targetMidnight = target; // midnight of target day
           const remaining = Math.max(0, targetMidnight - now);
-          const totalHours = Math.floor(remaining / 3600000);
           const hh = Math.floor(remaining / 3600000) % 24;
           const mm = Math.floor((remaining % 3600000) / 60000);
           const ss = Math.floor((remaining % 60000) / 1000);
