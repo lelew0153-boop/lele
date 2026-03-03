@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 中国传统节假日倒计时</title>
+  <style>
+    :root {
+      --red:    #c0392b;
+      --dark-red: #922b21;
+      --gold:   #d4ac0d;
+      --light-gold: #f9e79f;
+      --bg:     #1a0000;
+      --card-bg: rgba(255,255,255,0.06);
+      --card-border: rgba(212,172,13,0.35);
+      --text:   #fdf6e3;
+      --muted:  #c8a97e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(192,57,43,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 90%, rgba(192,57,43,0.12) 0%, transparent 60%);
+      color: var(--text);
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Decorative lanterns ── */
+    .lantern-row {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .lantern {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: swing 3s ease-in-out infinite;
+    }
+    .lantern:nth-child(even) { animation-delay: 0.5s; }
+    .lantern:nth-child(3)    { animation-delay: 1s;   }
+    @keyframes swing {
+      0%,100% { transform: rotate(-6deg); }
+      50%      { transform: rotate( 6deg); }
+    }
+    .lantern-body {
+      width: 36px; height: 52px;
+      background: radial-gradient(circle at 35% 35%, #e74c3c, #922b21);
+      border-radius: 50%;
+      box-shadow: 0 0 14px 4px rgba(231,76,60,0.55);
+      position: relative;
+    }
+    .lantern-body::before,
+    .lantern-body::after {
+      content: "";
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      width: 4px; height: 8px;
+      background: var(--gold);
+    }
+    .lantern-body::before { top: -8px; border-radius: 2px 2px 0 0; }
+    .lantern-body::after  { bottom: -8px; border-radius: 0 0 2px 2px; }
+    .lantern-tassel {
+      width: 2px; height: 18px;
+      background: var(--gold);
+      margin-top: 0;
+    }
+    .lantern-tassel::after {
+      content: "";
+      display: block;
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin-left: -3px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 5vw, 2.8rem);
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(212,172,13,0.6);
+      letter-spacing: 0.12em;
+    }
+    header p {
+      margin-top: 0.5rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+    }
+    #clock {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: rgba(212,172,13,0.12);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 0.3rem 1rem;
+      color: var(--gold);
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.4rem 1.2rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 28px rgba(212,172,13,0.18);
+    }
+    .card::before {
+      content: attr(data-emoji);
+      position: absolute;
+      right: 0.8rem; top: 0.6rem;
+      font-size: 2rem;
+      opacity: 0.55;
+    }
+
+    /* State variants */
+    .card.passed    { border-color: rgba(255,255,255,0.1); opacity: 0.6; }
+    .card.today     { border-color: var(--gold); box-shadow: 0 0 24px rgba(212,172,13,0.45); }
+    .card.upcoming  { border-color: var(--card-border); }
+    .card.near      { border-color: rgba(192,57,43,0.7); }
+
+    .card-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.55rem;
+      letter-spacing: 0.05em;
+    }
+    .card.passed   .card-tag { background: rgba(255,255,255,0.1); color: #aaa; }
+    .card.today    .card-tag { background: var(--gold); color: #1a0000; font-weight: 700; }
+    .card.near     .card-tag { background: rgba(192,57,43,0.4); color: #ff9999; }
+    .card.upcoming .card-tag { background: rgba(212,172,13,0.18); color: var(--gold); }
+
+    .card h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 0.2rem;
+    }
+    .card.today h2 { color: var(--light-gold); }
+
+    .card-date {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 0.9rem;
+    }
+
+    .countdown {
+      font-size: 2.2rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--gold);
+      letter-spacing: -0.01em;
+    }
+    .card.passed .countdown { color: #888; font-size: 1.1rem; font-weight: 400; }
+    .card.today  .countdown { color: #fff; font-size: 1.5rem; animation: pulse 1s ease-in-out infinite alternate; }
+    @keyframes pulse { from { text-shadow: 0 0 4px rgba(212,172,13,0.4); } to { text-shadow: 0 0 18px rgba(212,172,13,0.9); } }
+
+    .countdown-label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* HMS row for near/today */
+    .hms {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+    .hms-unit {
+      background: rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 0.2rem 0.45rem;
+      text-align: center;
+    }
+    .hms-unit span { display: block; }
+    .hms-unit .num { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+    .hms-unit .lbl { font-size: 0.62rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 480px) {
+      .lantern { display: none; }
+      .lantern:nth-child(-n+3) { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Decorative lanterns -->
+  <div class="lantern-row" aria-hidden="true">
+    <div class="lantern"><div class="lantern-body"></div><div class="lantern-tassel"></div></div>
+    <div class="lantern"><div class="lantern-body"></div><div class="lantern-tassel"></div></div>
+    <div class="lantern"><div class="lantern-body"></div><div class="lantern-tassel"></div></div>
+    <div class="lantern"><div class="lantern-body"></div><div class="lantern-tassel"></div></div>
+    <div class="lantern"><div class="lantern-body"></div><div class="lantern-tassel"></div></div>
+  </div>
+
+  <header>
+    <h1>🎊 2026 中国传统节假日倒计时 🎊</h1>
+    <p>马年吉祥 · 岁岁平安</p>
+    <div id="clock"></div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <p>日期依据农历 / 公历换算，节气以公历为准。祝您节节平安，岁岁如意 🧧</p>
+  </footer>
+
+  <script>
+    // ── Holiday data ──────────────────────────────────────────────
+    // date: YYYY-MM-DD (local midnight)
+    const HOLIDAYS = [
+      { name: "元旦",     date: "2026-01-01", emoji: "🎆", desc: "公历新年" },
+      { name: "腊八节",   date: "2026-01-26", emoji: "🍚", desc: "农历十二月初八" },
+      { name: "除夕",     date: "2026-02-16", emoji: "🧨", desc: "农历腊月三十" },
+      { name: "春节",     date: "2026-02-17", emoji: "🧧", desc: "农历正月初一 · 马年" },
+      { name: "元宵节",   date: "2026-03-03", emoji: "🏮", desc: "农历正月十五" },
+      { name: "清明节",   date: "2026-04-05", emoji: "🌿", desc: "二十四节气 · 扫墓祭祖" },
+      { name: "劳动节",   date: "2026-05-01", emoji: "⚒️",  desc: "国际劳动节" },
+      { name: "端午节",   date: "2026-06-20", emoji: "🐉", desc: "农历五月初五" },
+      { name: "七夕节",   date: "2026-08-19", emoji: "⭐", desc: "农历七月初七 · 中国情人节" },
+      { name: "中元节",   date: "2026-08-27", emoji: "🕯️", desc: "农历七月十五" },
+      { name: "中秋节",   date: "2026-09-25", emoji: "🌕", desc: "农历八月十五" },
+      { name: "国庆节",   date: "2026-10-01", emoji: "🇨🇳", desc: "中华人民共和国成立纪念日" },
+      { name: "重阳节",   date: "2026-10-17", emoji: "🍂", desc: "农历九月初九 · 老人节" },
+      { name: "冬至",     date: "2026-12-22", emoji: "❄️", desc: "二十四节气 · 最长夜" },
+      { name: "元旦",     date: "2027-01-01", emoji: "🎆", desc: "公历新年 (2027)" },
+    ];
+
+    // ── Helpers ───────────────────────────────────────────────────
+    function parseDate(str) {
+      const [y, m, d] = str.split("-").map(Number);
+      return new Date(y, m - 1, d);          // local midnight
+    }
+
+    function todayMidnight() {
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function pad(n) { return String(n).padStart(2, "0"); }
+
+    function formatDate(str) {
+      const d = parseDate(str);
+      const weekMap = ["日","一","二","三","四","五","六"];
+      return `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日  星期${weekMap[d.getDay()]}`;
+    }
+
+    // ── Build cards ───────────────────────────────────────────────
+    const grid = document.getElementById("grid");
+
+    HOLIDAYS.forEach(h => {
+      const target = parseDate(h.date);
+      const today  = todayMidnight();
+      const diffDays = Math.round((target - today) / 86400000);
+
+      let state = "upcoming";
+      if (diffDays < 0)           state = "passed";
+      else if (diffDays === 0)    state = "today";
+      else if (diffDays <= 30)    state = "near";
+
+      const tagText = {
+        passed:   "已过去",
+        today:    "🎉 就是今天！",
+        near:     "即将到来",
+        upcoming: "敬请期待",
+      }[state];
+
+      const card = document.createElement("article");
+      card.className  = `card ${state}`;
+      card.dataset.id = h.date + h.name;
+      card.dataset.emoji = h.emoji;
+      card.dataset.state = state;
+
+      card.innerHTML = `
+        <span class="card-tag">${tagText}</span>
+        <h2>${h.name}</h2>
+        <p class="card-date">${formatDate(h.date)} &nbsp;·&nbsp; ${h.desc}</p>
+        <div class="countdown" id="cd-${card.dataset.id}"></div>
+        <span class="countdown-label" id="lbl-${card.dataset.id}"></span>
+        <div class="hms" id="hms-${card.dataset.id}" style="display:none"></div>
+      `;
+
+      grid.appendChild(card);
+    });
+
+    // ── Tick ──────────────────────────────────────────────────────
+    function tick() {
+      const now   = new Date();
+      const today = todayMidnight();
+
+      // Real-time clock
+      document.getElementById("clock").textContent =
+        `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日  ` +
+        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      HOLIDAYS.forEach(h => {
+        const target  = parseDate(h.date);
+        const id      = h.date + h.name;
+        const cdEl    = document.getElementById("cd-" + id);
+        const lblEl   = document.getElementById("lbl-" + id);
+        const hmsEl   = document.getElementById("hms-" + id);
+        if (!cdEl) return;
+
+        const diffDays = Math.round((target - today) / 86400000);
+
+        if (diffDays < 0) {
+          cdEl.textContent  = `已过 ${-diffDays} 天`;
+          lblEl.textContent = "";
+          hmsEl.style.display = "none";
+        } else if (diffDays === 0) {
+          // count down hours/min/sec until midnight
+          const endOfDay  = new Date(today.getTime() + 86400000);
+          const remaining = Math.max(0, endOfDay - now);
+          const hh = Math.floor(remaining / 3600000);
+          const mm = Math.floor((remaining % 3600000) / 60000);
+          const ss = Math.floor((remaining % 60000) / 1000);
+          cdEl.textContent    = "🎉 今天就是" + h.name + "！";
+          lblEl.textContent   = "";
+          hmsEl.style.display = "flex";
+          hmsEl.innerHTML = `
+            <div class="hms-unit"><span class="num">${pad(hh)}</span><span class="lbl">时</span></div>
+            <div class="hms-unit"><span class="num">${pad(mm)}</span><span class="lbl">分</span></div>
+            <div class="hms-unit"><span class="num">${pad(ss)}</span><span class="lbl">秒</span></div>
+            <div class="hms-unit" style="align-self:center;background:none;color:var(--muted);font-size:.72rem">后结束</div>
+          `;
+        } else {
+          // Countdown in days + HMS
+          const targetMidnight = target; // midnight of target day
+          const remaining = Math.max(0, targetMidnight - now);
+          const totalHours = Math.floor(remaining / 3600000);
+          const hh = Math.floor(remaining / 3600000) % 24;
+          const mm = Math.floor((remaining % 3600000) / 60000);
+          const ss = Math.floor((remaining % 60000) / 1000);
+
+          cdEl.textContent  = diffDays + " 天";
+          lblEl.textContent = "距" + h.name + "还有";
+
+          if (diffDays <= 30) {
+            hmsEl.style.display = "flex";
+            hmsEl.innerHTML = `
+              <div class="hms-unit"><span class="num">${pad(hh)}</span><span class="lbl">时</span></div>
+              <div class="hms-unit"><span class="num">${pad(mm)}</span><span class="lbl">分</span></div>
+              <div class="hms-unit"><span class="num">${pad(ss)}</span><span class="lbl">秒</span></div>
+            `;
+          } else {
+            hmsEl.style.display = "none";
+          }
+        }
+      });
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
